@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messi vs Ronaldo Interactive Scoreboard</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+        .team-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+        }
+        /* বাম পাশে মেসি সাইড - নীল ব্যাকগ্রাউন্ড */
+        .messi-side {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            border-right: 4px solid #fff;
+        }
+        /* ডান পাশে রোনালদো সাইড - লাল ব্যাকগ্রাউন্ড */
+        .ronaldo-side {
+            background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        }
+        .logo {
+            font-size: 60px;
+            margin-bottom: 10px;
+            pointer-events: none;
+        }
+        h2 {
+            font-size: 45px;
+            margin: 10px 0;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        .score-box {
+            font-size: 150px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 4px 4px 10px rgba(0,0,0,0.6);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- মেসি সাইড (নীল) - বামে -->
+    <div class="team-container messi-side" id="messiZone">
+        <div class="logo">⚽</div>
+        <h2>Messi</h2>
+        <div class="score-box" id="scoreMessi">0</div>
+    </div>
+
+    <!-- রোনালদো সাইড (লাল) - ডানে -->
+    <div class="team-container ronaldo-side" id="ronaldoZone">
+        <div class="logo">⚽</div>
+        <h2>Ronaldo</h2>
+        <div class="score-box" id="scoreRonaldo">0</div>
+    </div>
+
+    <script>
+        let scoreM = 0;
+        let scoreR = 0;
+
+        function updateScore(team, change) {
+            if (team === 'Messi') {
+                scoreM = Math.max(0, scoreM + change);
+                document.getElementById('scoreMessi').innerText = scoreM;
+                speakNumber(scoreM);
+            } else if (team === 'Ronaldo') {
+                scoreR = Math.max(0, scoreR + change);
+                document.getElementById('scoreRonaldo').innerText = scoreR;
+                speakNumber(scoreR);
+            }
+        }
+
+        function speakNumber(num) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // আগের ভয়েস থামিয়ে নতুন সংখ্যা উচ্চারণ
+                let utterance = new SpeechSynthesisUtterance(num.toString());
+                utterance.rate = 1.0; 
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // সোয়াইপ ও টাচ কন্ট্রোল লজিক
+        function setupInteraction(elementId, teamName) {
+            let el = document.getElementById(elementId);
+            let startY = 0;
+            let endY = 0;
+
+            // মাউস ও টাচ স্টার্ট
+            el.addEventListener('mousedown', (e) => { startY = e.clientY; });
+            el.addEventListener('mouseup', (e) => {
+                endY = e.clientY;
+                handleGesture(startY, endY, teamName);
+            });
+
+            el.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, {passive: true});
+            el.addEventListener('touchend', (e) => {
+                endY = e.changedTouches[0].clientY;
+                handleGesture(startY, endY, teamName);
+            }, {passive: true});
+        }
+
+        function handleGesture(startY, endY, teamName) {
+            let diffY = startY - endY;
+            if (Math.abs(diffY) < 10) {
+                // সামান্য ক্লিক/ট্যাপ হলে ১ বাড়বে
+                updateScore(teamName, 1);
+            } else if (diffY > 30) {
+                // উপরের দিকে সোয়াইপ (Swipe Up) -> ১ বাড়বে
+                updateScore(teamName, 1);
+            } else if (diffY < -30) {
+                // নিচের দিকে সোয়াইপ (Swipe Down) -> ১ কমবে
+                updateScore(teamName, -1);
+            }
+        }
+
+        setupInteraction('messiZone', 'Messi');
+        setupInteraction('ronaldoZone', 'Ronaldo');
+    </script>
+
+</body>
+</html>
